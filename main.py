@@ -1,5 +1,6 @@
 import dlib
 import cv2
+import numpy as np
 
 class FaceDetector:
     def __init__(self):
@@ -17,6 +18,34 @@ class FaceDetector:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self.detector(gray)
         return faces
+    def adjust_gamma(self, frame, gamma=1.0):  # gamma is an optional parameter - if not provided, default value = 1.0
+        # build a lookup table mapping each pixel to its adjusted gamma values
+        # lookup table speeds up the process - calculates the adjusted gamma for each pixel and stores it in memory.
+        # gamma calculation : Output pixel value = inputValue ** gamma
+        # calculating exponentials is time-consuming hence lookup table is better.
+        inv_gamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+
+        return cv2.LUT(frame, table) # applying the gamma correction on the frame using the Lookup table
+
+    def auto_correct_brightness(self, frame):
+        # first calculate the average brightness of the image
+        # then adjust the gamma based on the thresholds (needs to be brighter or darker)
+        # call the adjust_gamma function to do this based on the requirements
+        avg_brightness = np.mean(frame)
+        print(avg_brightness)  # for testing
+
+        # Adjust gamma based on average brightness
+        if avg_brightness < 100:
+            print("adjusted") # for testing
+            gamma = 1.0  # Increase gamma for dark images
+        elif avg_brightness > 200:
+            gamma = 0.7  # Decrease gamma for bright images
+        else:
+            print("no adjustment")  # for testing
+            return frame
+        return self.adjust_gamma(frame, gamma)
+
 
 class WebcamCapture:
     def __init__(self):
@@ -39,13 +68,14 @@ def main():
 
         if ret:  # if frame successfully read
             frame = cv2.flip(frame, 1)  # mirror the image
-            faces = face_detector.detect_faces(frame)  # call the detector
+            new_frame = face_detector.auto_correct_brightness(frame)
+            faces = face_detector.detect_faces(new_frame)  # call the detector
 
             if len(faces) > 0:
                 largest_face_indx = face_detector.find_largest_face(faces)  # finding the largest face in frame
-                face_detector.draw_bounding_box(frame, faces[largest_face_indx])  # draw bounding box
+                face_detector.draw_bounding_box(new_frame, faces[largest_face_indx])  # draw bounding box
 
-            cv2.imshow('Facial Detection', frame)  # displaying window
+            cv2.imshow('Facial Detection', new_frame)  # displaying window
 
         if cv2.waitKey(1) & 0xFF == ord('q'):  # break out of webcam feed - for testing
             break
