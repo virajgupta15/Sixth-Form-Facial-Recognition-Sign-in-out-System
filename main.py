@@ -25,7 +25,7 @@ class FaceDetector:
         # calculating exponentials is time-consuming hence lookup table is better.
         inv_gamma = 1.0 / gamma
         table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-
+        print(np.mean(frame))
         return cv2.LUT(frame, table) # applying the gamma correction on the frame using the Lookup table
 
     def auto_correct_brightness(self, frame):
@@ -33,17 +33,21 @@ class FaceDetector:
         # then adjust the gamma based on the thresholds (needs to be brighter or darker)
         # call the adjust_gamma function to do this based on the requirements
         avg_brightness = np.mean(frame)
-        print(avg_brightness)  # for testing
+        #print(avg_brightness)  # for testing
 
         # Adjust gamma based on average brightness
-        if avg_brightness < 100:
-            print("adjusted") # for testing
-            gamma = 1.0  # Increase gamma for dark images
-        elif avg_brightness > 200:
-            gamma = 0.7  # Decrease gamma for bright images
+        if avg_brightness > 150:
+            gamma = 0.8  # Increase gamma for bright images
+            print("Making image darker")
+
+        elif avg_brightness < 100:
+            gamma = 1.5 # Decrease gamma for dark images
+            print("Making image brighter")
+
         else:
             print("no adjustment")  # for testing
             return frame
+
         return self.adjust_gamma(frame, gamma)
 
 
