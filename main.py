@@ -56,12 +56,19 @@ class FaceDetector:
 
 class FaceRecognition():
     def __init__(self):
-        self.predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat.bz2")
+        self.predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
+    def facial_landmarks(self, face):
+        pass
     def train_new_face(self, image_path, identifier):
-        image = cv2.imread(image_path)
-        grey_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # get image, lighting correction, detection, crop to face, find landmarks, get encoding.
+        face_detector = FaceDetector()  # Create an instance of the FaceDetector class
 
+        image = cv2.imread(image_path)
+        new_frame = face_detector.auto_correct_brightness(image)  # Apply gamma correction
+        print("brightness corrected")   
+        faces = face_detector.detect_faces(new_frame)  # Detect faces
+        print("face detected")
 
 
 class WebcamCapture:
@@ -86,7 +93,7 @@ def main():
         if ret:  # if frame successfully read
             frame = cv2.flip(frame, 1)  # mirror the image
             new_frame = face_detector.auto_correct_brightness(frame)
-            print(np.mean(new_frame))
+            # print(np.mean(new_frame))
             faces = face_detector.detect_faces(new_frame)  # call the detector
 
             if len(faces) > 0:
@@ -102,3 +109,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+face_recogniser = FaceRecognition()
+FaceRecognition.train_new_face(image_path="barack obama.jpg",identifier="obama")
